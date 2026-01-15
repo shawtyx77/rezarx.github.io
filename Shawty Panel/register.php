@@ -1,31 +1,47 @@
 <?php
-require "db.php";
+session_start();
+require "db.php"; // veritabanı bağlantın
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $username = trim($_POST["username"]);
-    $password = $_POST["password"];
-    $password_confirm = $_POST["password_confirm"];
+    $username = trim($_POST["username"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $password_confirm = $_POST["password_confirm"] ?? "";
+
+    if ($username === "" || $password === "" || $password_confirm === "") {
+        $_SESSION["error"] = "Tüm alanlar zorunlu";
+        header("Location: register.php");
+        exit;
+    }
 
     if ($password !== $password_confirm) {
-        $error = "Şifreler uyuşmuyor";
+        $_SESSION["error"] = "Şifreler uyuşmuyor";
+        header("Location: register.php");
+        exit;
+    }
+
+    if (!preg_match('/^[a-zA-Z0-9_]{3,32}$/', $username)) {
+        $_SESSION["error"] = "Kullanıcı adı geçersiz";
+        header("Location: register.php");
+        exit;
+    }
+
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+
+    $stmt = $conn->prepare("INSERT INTO users (username, password) VALUES (?, ?)");
+    $stmt->bind_param("ss", $username, $hash);
+
+    if ($stmt->execute()) {
+        $_SESSION["success"] = "Kayıt başarılı, giriş yapabilirsiniz";
+        header("Location: login.php");
+        exit;
     } else {
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-
-        $stmt = $conn->prepare(
-            "INSERT INTO users (username, password) VALUES (?, ?)"
-        );
-        $stmt->bind_param("ss", $username, $hash);
-
-        if ($stmt->execute()) {
-            $success = "Kayıt başarılı";
-        } else {
-            $error = "Bu kullanıcı adı zaten kayıtlı";
-        }
+        $_SESSION["error"] = "Bu kullanıcı adı zaten kayıtlı";
+        header("Location: register.php");
+        exit;
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="tr">
 <!DOCTYPE html>
