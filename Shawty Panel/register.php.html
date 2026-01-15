@@ -33,7 +33,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if ($stmt->execute()) {
         $_SESSION["success"] = "Kayıt başarılı, giriş yapabilirsiniz";
-        header("Location: login.php");
+        header("Location: login.php.html");
         exit;
     } else {
         $_SESSION["error"] = "Bu kullanıcı adı zaten kayıtlı";
